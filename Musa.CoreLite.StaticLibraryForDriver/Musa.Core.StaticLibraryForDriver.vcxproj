@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{35D076EE-676C-4AD1-89B0-5EB4AD7A9080}</ProjectGuid>
+    <ProjectName>Musa.CoreLite.StaticLibraryForDriver</ProjectName>
+    <RootNamespace>Musa</RootNamespace>
+    <MileProjectType>StaticLibrary</MileProjectType>
+    <MileProjectUseKernelMode>true</MileProjectUseKernelMode>
+    <MileProjectUseWindowsDriverKit>true</MileProjectUseWindowsDriverKit>
+  </PropertyGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x86.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.ARM64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.Default.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.props" />
+  <PropertyGroup Label="Configuration">
+    <OutDir>$(MileProjectBinariesPath)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(MileProjectObjectsPath)$(Configuration)\$(MSBuildProjectName)\$(Platform)\</IntDir>
+    <GeneratedFilesDir>$(IntDir)Generated Files\</GeneratedFilesDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>universal.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>%(PrecompiledHeaderFile);%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <Target Name="CustomPublish" AfterTargets="Build">
+    <ItemGroup>
+      <MusaCoreLiteLicense Include="$(SolutionDir)LICENSE" />
+      <MusaCoreLiteLicense Include="$(SolutionDir)README.md" />
+      <MusaCoreLiteHeaders Include="$(SourcesDirectory)Musa.CoreLite.h" />
+      <MusaCoreLiteProduct Include="$(OutDir)$(TargetName).lib" />
+      <MusaCoreLiteProduct Include="$(OutDir)$(TargetName).pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(MusaCoreLiteLicense)" DestinationFolder="$(PublishDirectory)" />
+    <Copy SourceFiles="@(MusaCoreLiteHeaders)" DestinationFolder="$(PublishDirectory)Include" />
+    <Copy SourceFiles="@(MusaCoreLiteProduct)" DestinationFolder="$(PublishDirectory)Library\$(Configuration)\$(Platform)" />
+    <Copy SourceFiles="$(IntDirFullPath)Musa.CoreLite.SystemCall.Stubs.obj" DestinationFiles="$(PublishDirectory)Library\$(Configuration)\$(Platform)\Musa.CoreLite.SystemCallForDriver.Stubs.obj" />
+  </Target>
+  <ItemGroup>
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.h" />
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.h" />
+    <ClInclude Include="$(SourcesDirectory)Musa.Utilities.h" />
+    <ClInclude Include="$(SourcesDirectory)Musa.Utilities.PEParser.h" />
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.Heap.h" />
+    <ClInclude Include="universal.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.cpp" />
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.Nothing.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.cpp" />
+    <ClCompile Include="$(SourcesDirectory)Musa.Utilities.cpp" />
+    <ClCompile Include="$(SourcesDirectory)Musa.Utilities.PEParser.cpp" />
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.Stubs.cpp" />
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.Heap.cpp" />
+  </ItemGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.targets" />
+</Project>

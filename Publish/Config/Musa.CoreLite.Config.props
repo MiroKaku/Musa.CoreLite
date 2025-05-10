@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup Condition="'$(IsKernelModeToolset)'==''">
+    <IsKernelModeToolset Condition="'$(PlatformToolset.Contains(`KernelMode`))' == 'true'">true</IsKernelModeToolset>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- \Musa.CoreLite\config\..\ -->
+    <Musa_CoreLite_Root>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..'))</Musa_CoreLite_Root>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Musa_CoreLite_Include>$(Musa_CoreLite_Root)\Include</Musa_CoreLite_Include>
+    <Musa_CoreLite_Library>$(Musa_CoreLite_Root)\Library\$(Configuration)\$(Platform)</Musa_CoreLite_Library>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludePath>$(Musa_CoreLite_Include);$(IncludePath)</IncludePath>
+    <LibraryPath>$(Musa_CoreLite_Library);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+
+</Project>

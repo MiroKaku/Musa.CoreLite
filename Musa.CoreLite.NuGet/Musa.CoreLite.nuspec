@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata minClientVersion="2.5">
+    <id>Musa.CoreLite</id>
+    <version>$version$</version>
+    <title>Musa.CoreLite</title>
+    <authors>MeeSong</authors>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <readme>build\native\README.md</readme>
+    <description>Musa.CoreLite - 该项目旨在解决 Zw* 系统例程导出符号不完整的问题，使开发者能够在用户模式和内核模式下直接调用所有 Zw* 系统例程而无需担心符号缺失的问题。
+    </description>
+    <releaseNotes>$releaseNotes$</releaseNotes>
+    <copyright>Copyright© MeeSong</copyright>
+    <tags>Musa.CoreLite Native WDK KMDF Kernel Driver</tags>
+    <projectUrl>https://github.com/MiroKaku/Musa.CoreLite</projectUrl>
+    <repository type="git" url="https://github.com/MiroKaku/Musa.CoreLite.git" branch="main" commit="$commit$" />
+    <dependencies>
+      <dependency id="Musa.Veil" version="1.3.2" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src=".\Musa.CoreLite.props" target="build\native\" />
+    <file src="..\Publish\**" target="build\native\" exclude="**\*.lastcodeanalysissucceeded;"/>
+  </files>
+</package>

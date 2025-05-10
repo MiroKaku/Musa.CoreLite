@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{03CEA0CB-003C-4FA7-9998-0E4FDB874B96}</ProjectGuid>
+    <ProjectName>Musa.CoreLite.Test</ProjectName>
+    <RootNamespace>Musa.Test</RootNamespace>
+    <MileProjectType>ConsoleApplication</MileProjectType>
+    <MileProjectManifestFile>Musa.CoreLite.Test.manifest</MileProjectManifestFile>
+    <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
+    <MileProjectCompanyName>MeeSong</MileProjectCompanyName>
+    <MileProjectFileDescription>Musa.CoreLite.Test</MileProjectFileDescription>
+    <MileProjectInternalName>Musa.CoreLite.Test</MileProjectInternalName>
+    <MileProjectLegalCopyright>© MeeSong. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectOriginalFilename>Musa.CoreLite.Test.exe</MileProjectOriginalFilename>
+    <MileProjectProductName>Musa.CoreLite</MileProjectProductName>
+    <MileProjectVersion>1.0.0.0</MileProjectVersion>
+    <MileProjectVersionTag Condition="false">Alpha 1</MileProjectVersionTag>
+  </PropertyGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x86.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.ARM64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.Default.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.props" />
+  <PropertyGroup Label="Configuration">
+    <OutDir>$(MileProjectBinariesPath)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(MileProjectObjectsPath)$(Configuration)\$(MSBuildProjectName)\$(Platform)\</IntDir>
+    <GeneratedFilesDir>$(IntDir)Generated Files\</GeneratedFilesDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Manifest Include="Musa.CoreLite.Test.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Musa.CoreLite.Test.cpp" />
+  </ItemGroup>
+  <PropertyGroup>
+    <MusaCoreOnlyHeader>false</MusaCoreOnlyHeader>
+  </PropertyGroup>
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.props" />
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.targets" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.targets" />
+</Project>

@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3FFE7D01-28D2-4428-9FA0-CE33B6A7B3FF}</ProjectGuid>
+    <ProjectName>Musa.CoreLite.TestForDriver</ProjectName>
+    <RootNamespace>Musa.Test</RootNamespace>
+    <MileProjectType>WDMDriver</MileProjectType>
+    <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
+    <MileProjectCompanyName>MeeSong</MileProjectCompanyName>
+    <MileProjectFileDescription>Musa.CoreLite.TestForDriver</MileProjectFileDescription>
+    <MileProjectInternalName>Musa.CoreLite.TestForDriver</MileProjectInternalName>
+    <MileProjectLegalCopyright>© MeeSong. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectOriginalFilename>Musa.CoreLite.TestForDriver.sys</MileProjectOriginalFilename>
+    <MileProjectProductName>Musa.CoreLite</MileProjectProductName>
+    <MileProjectVersion>1.0.0.0</MileProjectVersion>
+    <MileProjectVersionTag Condition="false">Alpha 1</MileProjectVersionTag>
+  </PropertyGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x86.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.ARM64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.Default.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.props" />
+  <PropertyGroup Label="Configuration">
+    <OutDir>$(MileProjectBinariesPath)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(MileProjectObjectsPath)$(Configuration)\$(MSBuildProjectName)\$(Platform)\</IntDir>
+    <GeneratedFilesDir>$(IntDir)Generated Files\</GeneratedFilesDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <FilesToPackage Include="$(TargetPath)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Inf Include="Musa.CoreLite.TestForDriver.inf" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Musa.CoreLite.TestForDriver.cpp" />
+  </ItemGroup>
+  <PropertyGroup>
+    <MusaCoreOnlyHeader>false</MusaCoreOnlyHeader>
+  </PropertyGroup>
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.props" />
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.targets" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.targets" />
+</Project>

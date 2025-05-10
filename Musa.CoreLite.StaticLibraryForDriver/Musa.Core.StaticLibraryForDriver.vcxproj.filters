@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="universal.h" />
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.h">
+      <Filter>Musa.CoreLite</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.h">
+      <Filter>Musa.CoreLite</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SourcesDirectory)Musa.Utilities.PEParser.h">
+      <Filter>Musa.Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SourcesDirectory)Musa.Utilities.h">
+      <Filter>Musa.Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SourcesDirectory)Musa.CoreLite.Heap.h">
+      <Filter>Musa.CoreLite</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Musa.CoreLite">
+      <UniqueIdentifier>{6382CFB6-557A-4FDD-9A87-59618A091F94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Musa.Utilities">
+      <UniqueIdentifier>{5098E4DC-AB9E-424D-AB6B-C2A6312148A9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.cpp">
+      <Filter>Musa.CoreLite</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.Nothing.cpp">
+      <Filter>Musa.CoreLite</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.cpp">
+      <Filter>Musa.CoreLite</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.SystemCall.Stubs.cpp">
+      <Filter>Musa.CoreLite</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.Utilities.cpp">
+      <Filter>Musa.Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.Utilities.PEParser.cpp">
+      <Filter>Musa.Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SourcesDirectory)Musa.CoreLite.Heap.cpp">
+      <Filter>Musa.CoreLite</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

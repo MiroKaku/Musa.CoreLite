@@ -1,0 +1,22 @@
+<Solution>
+  <Configurations>
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Musa.CoreLite.StaticLibrary/Musa.CoreLite.StaticLibrary.vcxproj" Id="23fa46ec-5996-4f19-b8a0-cf8a9e615b0d" />
+  <Project Path="Musa.CoreLite.StaticLibraryForDriver/Musa.Core.StaticLibraryForDriver.vcxproj" Id="35d076ee-676c-4ad1-89b0-5eb4ad7a9080">
+    <Build Solution="*|x86" Project="false" />
+    <Deploy Solution="*|ARM64" />
+    <Deploy Solution="*|x64" />
+  </Project>
+  <Project Path="Musa.CoreLite.Test/Musa.CoreLite.Test.vcxproj" Id="03cea0cb-003c-4fa7-9998-0e4fdb874b96">
+    <BuildDependency Project="Musa.CoreLite.StaticLibrary/Musa.CoreLite.StaticLibrary.vcxproj" />
+  </Project>
+  <Project Path="Musa.CoreLite.TestForDriver/Musa.CoreLite.TestForDriver.vcxproj" Id="3ffe7d01-28d2-4428-9fa0-ce33b6a7b3ff">
+    <BuildDependency Project="Musa.CoreLite.StaticLibraryForDriver/Musa.Core.StaticLibraryForDriver.vcxproj" />
+    <Build Solution="*|x86" Project="false" />
+    <Deploy Solution="*|ARM64" />
+    <Deploy Solution="*|x64" />
+  </Project>
+</Solution>
