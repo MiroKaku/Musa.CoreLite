@@ -162,7 +162,7 @@ namespace Musa::CoreLite
                 UNREFERENCED_PARAMETER(Ordinal);
                 UNREFERENCED_PARAMETER(Context);
 
-                NTSTATUS Status = STATUS_SUCCESS;
+                NTSTATUS Status = STATUS_CALLBACK_BYPASS;
 
                 if (Name) {
                     if (*reinterpret_cast<const unsigned short*>(Name) == 'wZ') {
@@ -473,7 +473,7 @@ namespace Musa::CoreLite
                 UNREFERENCED_PARAMETER(Ordinal);
                 UNREFERENCED_PARAMETER(Context);
 
-                NTSTATUS Status = STATUS_SUCCESS;
+                NTSTATUS Status = STATUS_CALLBACK_BYPASS;
 
                 if (Name) {
                     if (*reinterpret_cast<const unsigned short*>(Name) == 'wZ') {
@@ -506,7 +506,7 @@ namespace Musa::CoreLite
                         #endif
 
                         if (!RtlInsertElementGenericTableAvl(&SyscallTableByIndex, &Entry,
-                                                             sizeof(MUSA_SYSCALL_LIST_ENTRY), nullptr)) {
+                            sizeof(MUSA_SYSCALL_LIST_ENTRY), nullptr)) {
 
                             #if defined(DBG)
                             Heap::HeapFree(const_cast<char*>(Entry.Name));

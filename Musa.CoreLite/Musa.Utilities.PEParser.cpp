@@ -45,9 +45,15 @@ namespace Musa::Utils::PEParser
             }
 
             Status = Callback(ExportOrdinal, ExportName, ExportAddress, Context);
-            if (!NT_SUCCESS(Status)) {
+            if (NT_SUCCESS(Status)) {
                 break;
             }
+            if (Status != STATUS_CALLBACK_BYPASS) {
+                break;
+            }
+        }
+        if (Status == STATUS_CALLBACK_BYPASS) {
+            Status = STATUS_SUCCESS;
         }
 
         return Status;
