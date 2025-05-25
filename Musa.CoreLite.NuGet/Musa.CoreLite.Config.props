@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- \Musa.CoreLite\config\..\ -->
+    <!-- \Musa.CoreLite\Config\..\ -->
     <Musa_CoreLite_Root>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)\..'))</Musa_CoreLite_Root>
   </PropertyGroup>
 
