@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{59A9CD60-F2B8-4A2F-9813-92F940C5C5A1}</ProjectGuid>
+    <ProjectName>Musa.CoreLite.TestWithMT</ProjectName>
+    <RootNamespace>Musa.Test</RootNamespace>
+    <MileProjectType>ConsoleApplication</MileProjectType>
+    <MileProjectManifestFile>Musa.CoreLite.TestWithMT.manifest</MileProjectManifestFile>
+    <MileProjectUseProjectProperties>true</MileProjectUseProjectProperties>
+    <MileProjectCompanyName>MeeSong</MileProjectCompanyName>
+    <MileProjectFileDescription>Musa.CoreLite.TestWithMT</MileProjectFileDescription>
+    <MileProjectInternalName>Musa.CoreLite.TestWithMT</MileProjectInternalName>
+    <MileProjectLegalCopyright>© MeeSong. All rights reserved.</MileProjectLegalCopyright>
+    <MileProjectOriginalFilename>Musa.CoreLite.TestWithMT.exe</MileProjectOriginalFilename>
+    <MileProjectProductName>Musa.CoreLite</MileProjectProductName>
+    <MileProjectVersion>1.0.0.0</MileProjectVersion>
+    <MileProjectVersionTag Condition="false">Alpha 1</MileProjectVersionTag>
+  </PropertyGroup>
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x86.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.x64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Platform.ARM64.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.Default.props" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.props" />
+  <PropertyGroup Label="Configuration">
+    <OutDir>$(MileProjectBinariesPath)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(MileProjectObjectsPath)$(Configuration)\$(MSBuildProjectName)\$(Platform)\</IntDir>
+    <GeneratedFilesDir>$(IntDir)Generated Files\</GeneratedFilesDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Manifest Include="Musa.CoreLite.TestWithMT.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Musa.CoreLite.TestWithMT.cpp" />
+  </ItemGroup>
+  <PropertyGroup>
+    <MusaCoreOnlyHeader>false</MusaCoreOnlyHeader>
+  </PropertyGroup>
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.props" />
+  <Import Project="..\Publish\Config\Musa.CoreLite.Config.targets" />
+  <Import Sdk="Mile.Project.Configurations" Project="Mile.Project.Cpp.targets" />
+</Project>

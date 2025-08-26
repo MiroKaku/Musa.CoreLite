@@ -10,6 +10,7 @@
     <Deploy Solution="*|ARM64" />
     <Deploy Solution="*|x64" />
   </Project>
+  <Project Path="Musa.CoreLite.StaticLibraryWithMT/Musa.CoreLite.StaticLibraryWithMT.vcxproj" Id="35d7b357-76b9-4d2d-8b1d-3c566ecc724d" />
   <Project Path="Musa.CoreLite.Test/Musa.CoreLite.Test.vcxproj" Id="03cea0cb-003c-4fa7-9998-0e4fdb874b96">
     <BuildDependency Project="Musa.CoreLite.StaticLibrary/Musa.CoreLite.StaticLibrary.vcxproj" />
   </Project>
@@ -18,5 +19,8 @@
     <Build Solution="*|x86" Project="false" />
     <Deploy Solution="*|ARM64" />
     <Deploy Solution="*|x64" />
+  </Project>
+  <Project Path="Musa.CoreLite.TestWithMT/Musa.CoreLite.TestWithMT.vcxproj" Id="59a9cd60-f2b8-4a2f-9813-92f940c5c5a1">
+    <BuildDependency Project="Musa.CoreLite.StaticLibraryWithMT/Musa.CoreLite.StaticLibraryWithMT.vcxproj" />
   </Project>
 </Solution>
