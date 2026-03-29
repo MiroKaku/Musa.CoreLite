@@ -46,6 +46,19 @@ jobs:
         run: |
           .\BuildAllTargets.cmd
 
+      - name: Test
+        shell: cmd
+        run: |
+          setlocal enabledelayedexpansion
+          for %%c in (Debug Release) do (
+            for %%p in (x86 x64) do (
+              if exist "Output\Binaries\%%c\%%p\Musa.CoreLite.Test.exe" (
+                echo Running Output\Binaries\%%c\%%p\Musa.CoreLite.Test.exe
+                "Output\Binaries\%%c\%%p\Musa.CoreLite.Test.exe" || exit /B 1
+              )
+            )
+          )
+
       - name: Build NuGet
         if: startsWith(github.ref, 'refs/tags/v')
         shell: pwsh

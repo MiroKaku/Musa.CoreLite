@@ -27,6 +27,12 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
   </ItemDefinitionGroup>
+  <Target Name="SyncConfigFiles" BeforeTargets="Build">
+    <Copy SourceFiles="$(SolutionDir)Musa.CoreLite.NuGet\Musa.CoreLite.Config.props"
+          DestinationFolder="$(PublishDirectory)Config" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(SolutionDir)Musa.CoreLite.NuGet\Musa.CoreLite.Config.targets"
+          DestinationFolder="$(PublishDirectory)Config" SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="CustomPublish" AfterTargets="Build">
     <ItemGroup>
       <MusaCoreLiteLicense Include="$(SolutionDir)LICENSE" />

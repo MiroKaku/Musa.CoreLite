@@ -1,4 +1,5 @@
 ﻿#pragma once
+// 6101: SAL "return value not set" — suppress false positives for NT API out-param patterns
 #pragma warning(disable: 6101)
 
 // Config Macro

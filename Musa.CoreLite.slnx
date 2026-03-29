@@ -20,7 +20,5 @@
     <Deploy Solution="*|ARM64" />
     <Deploy Solution="*|x64" />
   </Project>
-  <Project Path="Musa.CoreLite.TestWithMT/Musa.CoreLite.TestWithMT.vcxproj" Id="59a9cd60-f2b8-4a2f-9813-92f940c5c5a1">
-    <BuildDependency Project="Musa.CoreLite.StaticLibraryWithMT/Musa.CoreLite.StaticLibraryWithMT.vcxproj" />
-  </Project>
+
 </Solution>
