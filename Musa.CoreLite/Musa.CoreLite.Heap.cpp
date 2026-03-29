@@ -32,7 +32,7 @@ namespace Musa::CoreLite::Heap
 
     NTSTATUS MUSA_API HeapSetup()
     {
-        MusaCoreLiteHeap = RtlCreateHeap(HEAP_GROWABLE | HEAP_NO_SERIALIZE, nullptr,
+        MusaCoreLiteHeap = RtlCreateHeap(HEAP_GROWABLE, nullptr,
             0, 0, nullptr, nullptr);
         if (MusaCoreLiteHeap == nullptr) {
             return STATUS_INSUFFICIENT_RESOURCES;

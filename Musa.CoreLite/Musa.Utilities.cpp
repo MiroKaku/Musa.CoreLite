@@ -9,6 +9,8 @@ namespace Musa::Utils
         _In_  PCWSTR ModuleName
     )
     {
+        *ModuleBase = nullptr;
+
         UNICODE_STRING Name{};
         NTSTATUS Status = RtlInitUnicodeStringEx(&Name, ModuleName);
         if (!NT_SUCCESS(Status)) {

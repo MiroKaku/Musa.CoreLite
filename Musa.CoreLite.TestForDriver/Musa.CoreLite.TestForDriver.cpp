@@ -1,4 +1,4 @@
-﻿// unnecessary, fix ReSharper's code analysis.
+﻿// 4117: macro redefinition of _KERNEL_MODE — required for non-WDK builds to enable kernel-mode code paths
 #pragma warning(suppress: 4117)
 #define _KERNEL_MODE 1
 

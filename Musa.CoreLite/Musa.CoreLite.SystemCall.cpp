@@ -93,6 +93,7 @@ namespace Musa::CoreLite
 {
     RTL_AVL_TABLE SyscallTableByName{};
     RTL_AVL_TABLE SyscallTableByIndex{};
+    volatile LONG SyscallTableReady = 0;
 
     VEIL_DECLARE_STRUCT(MUSA_SYSCALL_LIST_ENTRY)
     {
@@ -261,6 +262,9 @@ namespace Musa::CoreLite
                         break;
                     }
                 }
+                else {
+                    MusaLOG("ZwQuerySystemTime re-insert: lookup failed for Index %u", IndexOfPrevious);
+                }
             }
 
             // dump NtOS Zw routines.
@@ -343,7 +347,7 @@ namespace Musa::CoreLite
             const auto CodeSectionBase = static_cast<const uint8_t*>(ImageBaseOfNtos) + SectionOfNtos->VirtualAddress;
 
             const uint8_t* FirstZwRoutine = nullptr;
-            for (size_t Idx = 0; Idx < CodeSectionSize; ++Idx) {
+            for (size_t Idx = 0; Idx + sizeof(uint64_t) <= CodeSectionSize; ++Idx) {
                 #if defined(_X86_) || defined(_AMD64_)
                 if (*reinterpret_cast<const uint64_t*>(CodeSectionBase + Idx) == ZwCodeTemplate) {
                     FirstZwRoutine = CodeSectionBase + Idx - OffsetOfTemplate;
@@ -364,13 +368,24 @@ namespace Musa::CoreLite
             }
 
             const auto CountOfZwRoutine = RtlNumberGenericTableElementsAvl(&SyscallTableByIndex);
+            const auto CodeSectionEnd  = CodeSectionBase + CodeSectionSize;
             for (size_t Idx = 0; Idx < CountOfZwRoutine; ++Idx) {
                 const auto ZwRoutine = FirstZwRoutine + (Idx * SizeOfZwRoutine);
+
+                if (ZwRoutine + sizeof(uint64_t) > CodeSectionEnd) {
+                    break;
+                }
 
                 MUSA_SYSCALL_LIST_ENTRY Entry{};
 
                 #if defined(_X86_) || defined(_AMD64_)
+                if (ZwRoutine + OffsetOfTemplate + sizeof(uint64_t) > CodeSectionEnd) {
+                    break;
+                }
                 if (*reinterpret_cast<const uint64_t*>(ZwRoutine + OffsetOfTemplate) != ZwCodeTemplate) {
+                    break;
+                }
+                if (ZwRoutine + OffsetOfZwIndex + sizeof(uint32_t) > CodeSectionEnd) {
                     break;
                 }
                 Entry.Index = *reinterpret_cast<const uint32_t*>(ZwRoutine + OffsetOfZwIndex);
@@ -385,6 +400,9 @@ namespace Musa::CoreLite
                 if (const auto MatchEntry = static_cast<PMUSA_SYSCALL_LIST_ENTRY>(
                     RtlLookupElementGenericTableAvl(&SyscallTableByIndex, &Entry))) {
                     MatchEntry->Address = Utils::FastEncodePointer(ZwRoutine);
+                }
+                else {
+                    MusaLOG("ZwRoutine backfill: no table entry for Index %u", Entry.Index);
                 }
             }
 
@@ -443,6 +461,10 @@ namespace Musa::CoreLite
 
         if (SectionHandle) {
             (void)ZwClose(SectionHandle);
+        }
+
+        if (NT_SUCCESS(Status)) {
+            InterlockedExchange(&SyscallTableReady, 1);
         }
 
         return Status;
@@ -602,6 +624,9 @@ namespace Musa::CoreLite
                         break;
                     }
                 }
+                else {
+                    MusaLOG("ZwQuerySystemTime re-insert: lookup failed for Index %u", IndexOfPrevious);
+                }
             }
 
             #if defined(DBG)
@@ -615,6 +640,10 @@ namespace Musa::CoreLite
 
         } while (false);
 
+        if (NT_SUCCESS(Status)) {
+            InterlockedExchange(&SyscallTableReady, 1);
+        }
+
         return Status;
     }
 #endif // _KERNEL_MODE
@@ -623,26 +652,23 @@ namespace Musa::CoreLite
     _IRQL_requires_max_(APC_LEVEL)
     NTSTATUS MUSA_API SystemCallTeardown()
     {
-        NTSTATUS Status = STATUS_SUCCESS;
+        InterlockedExchange(&SyscallTableReady, 0);
 
-        do {
-            for (auto Entry = RtlGetElementGenericTableAvl(&SyscallTableByName, 0);
-                Entry;
-                Entry = RtlGetElementGenericTableAvl(&SyscallTableByName, 0)) {
+        for (auto Entry = RtlGetElementGenericTableAvl(&SyscallTableByName, 0);
+            Entry;
+            Entry = RtlGetElementGenericTableAvl(&SyscallTableByName, 0)) {
 
-                RtlDeleteElementGenericTableAvl(&SyscallTableByName, Entry);
-            }
+            RtlDeleteElementGenericTableAvl(&SyscallTableByName, Entry);
+        }
 
-            for (auto Entry = RtlGetElementGenericTableAvl(&SyscallTableByIndex, 0);
-                Entry;
-                Entry = RtlGetElementGenericTableAvl(&SyscallTableByIndex, 0)) {
+        for (auto Entry = RtlGetElementGenericTableAvl(&SyscallTableByIndex, 0);
+            Entry;
+            Entry = RtlGetElementGenericTableAvl(&SyscallTableByIndex, 0)) {
 
-                RtlDeleteElementGenericTableAvl(&SyscallTableByIndex, Entry);
-            }
+            RtlDeleteElementGenericTableAvl(&SyscallTableByIndex, Entry);
+        }
 
-        } while (false);
-
-        return Status;
+        return STATUS_SUCCESS;
     }
 
     _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -659,16 +685,20 @@ namespace Musa::CoreLite
         _In_ size_t          NameHash
     )
     {
-        MUSA_SYSCALL_LIST_ENTRY Entry{.NameHash = NameHash};
-        if (const auto Matched = static_cast<PCMUSA_SYSCALL_LIST_ENTRY>(RtlLookupElementGenericTableAvl(
-            &SyscallTableByName, &Entry))) {
-            return const_cast<void*>(Utils::FastDecodePointer(Matched->Address));
+        if (ReadAcquire(&SyscallTableReady)) {
+            MUSA_SYSCALL_LIST_ENTRY Entry{.NameHash = NameHash};
+            if (const auto Matched = static_cast<PCMUSA_SYSCALL_LIST_ENTRY>(RtlLookupElementGenericTableAvl(
+                &SyscallTableByName, &Entry))) {
+                return const_cast<void*>(Utils::FastDecodePointer(Matched->Address));
+            }
         }
 
         if (Name == nullptr) {
+            MusaLOG("Syscall table lookup missed for NameHash 0x%zX, no Name for fallback", NameHash);
             return nullptr;
         }
 
+        MusaLOG("Syscall table lookup missed for '%s' (NameHash 0x%zX), falling back to export lookup", Name, NameHash);
         #ifdef _KERNEL_MODE
         return RtlFindExportedRoutineByName(MusaCoreLiteNtBase, Name);
         #else

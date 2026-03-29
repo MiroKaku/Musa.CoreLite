@@ -15,6 +15,13 @@
 //
 // MusaCoreLite
 //
+// API Contract:
+//   - Callers are responsible for ensuring parameter validity.
+//   - MusaCoreLiteStartup() must be called once before any other API, and must
+//     not be called concurrently. MusaCoreLiteShutdown() is the reverse.
+//   - MusaCoreLiteGetSystemRoutine / MusaCoreLiteGetSystemRoutineByNameHash are
+//     safe to call concurrently after startup completes.
+//
 
 EXTERN_C_START
 

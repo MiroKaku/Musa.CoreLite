@@ -70,7 +70,7 @@ namespace Musa::Utils::PEParser
         auto NtSection = IMAGE_FIRST_SECTION(NtHeaders);
         for (auto Idx = 0; Idx < NtHeaders->FileHeader.NumberOfSections; Idx++) {
             if (Rva >= NtSection->VirtualAddress &&
-                Rva < NtSection->VirtualAddress + NtSection->SizeOfRawData
+                Rva < NtSection->VirtualAddress + NtSection->Misc.VirtualSize
                 ) {
                 return NtSection;
             }

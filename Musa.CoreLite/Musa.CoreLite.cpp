@@ -83,10 +83,14 @@ extern"C"
             Status = Utils::GetLoadedModuleBase(&MusaCoreLiteNtdllBase, L"ntdll.dll");
             if (!NT_SUCCESS(Status)) {
                 MusaLOG("Failed to get ntdll base, 0x%08lX", Status);
-                return STATUS_NOT_FOUND;
+                break;
             }
 
+            // Map and remap ntdll section using a local pointer to avoid TOCTOU:
+            // MusaCoreLiteNtdllBaseSecure is only assigned after remap succeeds,
+            // so concurrent readers never see a stale or partially-remapped address.
             HANDLE NtdllSectionHandle = nullptr;
+            PVOID  NtdllSecureView    = nullptr;
             do {
                 Status = Utils::GetKnownDllSectionHandle(&NtdllSectionHandle, L"ntdll.dll",
                     SECTION_MAP_READ | SECTION_MAP_EXECUTE);
@@ -96,20 +100,27 @@ extern"C"
                 }
 
                 SIZE_T ViewSize = 0;
-                Status = ZwMapViewOfSection(NtdllSectionHandle, ZwCurrentProcess(), &MusaCoreLiteNtdllBaseSecure,
+                Status = ZwMapViewOfSection(NtdllSectionHandle, ZwCurrentProcess(), &NtdllSecureView,
                     0, 0, nullptr, &ViewSize, ViewUnmap, 0, PAGE_EXECUTE_READ);
                 if (!NT_SUCCESS(Status)) {
                     MusaLOG("Failed to map ntdll section: 0x%X", Status);
                     break;
                 }
 
-                Status = Utils::RemapSectionView(&NtdllSectionHandle, &MusaCoreLiteNtdllBaseSecure, &ViewSize);
+                Status = Utils::RemapSectionView(&NtdllSectionHandle, &NtdllSecureView, &ViewSize);
                 if (!NT_SUCCESS(Status)) {
                     MusaLOG("Failed to remap ntdll section: 0x%X", Status);
                     break;
                 }
 
+                // Publish the fully-remapped view atomically.
+                MusaCoreLiteNtdllBaseSecure = NtdllSecureView;
+                NtdllSecureView = nullptr;
+
             } while (false);
+            if (NtdllSecureView) {
+                (void)ZwUnmapViewOfSection(ZwCurrentProcess(), NtdllSecureView);
+            }
             if (NtdllSectionHandle) {
                 (void)ZwClose(NtdllSectionHandle);
             }
@@ -117,7 +128,7 @@ extern"C"
             Status = SystemCallSetup();
             if (!NT_SUCCESS(Status)) {
                 MusaLOG("Failed to setup system call, 0x%08lX", Status);
-                return Status;
+                break;
             }
 
             MusaLOG("MusaCoreLite initialized successfully");

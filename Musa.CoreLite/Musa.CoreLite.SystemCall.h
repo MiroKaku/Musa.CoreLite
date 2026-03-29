@@ -1,5 +1,10 @@
 ﻿#pragma once
 
+// Internal API Contract:
+//   - Callers are responsible for ensuring parameter validity.
+//   - Name pointers must remain valid for the duration of the call.
+//   - NameHash must match Fnv1aHash(Name, strlen(Name)) when both are provided.
+
 namespace Musa::CoreLite
 {
     _Must_inspect_result_

@@ -1,4 +1,7 @@
 ﻿#pragma once
+// 6101: SAL "return value not set" — suppress false positives for NT API out-param patterns
+// 28101: function class annotation mismatch — driver routines use non-standard calling conventions
+// 28167: IRQL annotation mismatch — suppress for mixed-IRQL driver helper functions
 #pragma warning(disable: 6101 28101 28167)
 
 // Config Macro
@@ -6,7 +9,7 @@
 #define POOL_ZERO_DOWN_LEVEL_SUPPORT 1
 #define RTL_USE_AVL_TABLES
 
-// unnecessary, fix ReSharper's code analysis.
+// 4117: macro redefinition of _KERNEL_MODE — required for non-WDK builds to enable kernel-mode code paths
 #pragma warning(suppress: 4117)
 #define _KERNEL_MODE 1
 
