@@ -14,6 +14,46 @@
 #endif
 
 
+#define KTEST_EXPECT(expr, name)                                              \
+    do {                                                                      \
+        ++TestsRun;                                                           \
+        if (expr) {                                                           \
+            MusaLOG("[PASS] %s", name);                                       \
+        }                                                                     \
+        else {                                                                \
+            ++TestsFailed;                                                    \
+            MusaLOG("[FAIL] %s", name);                                       \
+        }                                                                     \
+    } while (false)
+
+
+namespace
+{
+    constexpr size_t Fnv1aHash(const char* Buffer, size_t Count) noexcept
+    {
+#if defined(_WIN64)
+        constexpr size_t FnvOffsetBasis = 14695981039346656037ULL;
+        constexpr size_t FnvPrime       = 1099511628211ULL;
+#else
+        constexpr size_t FnvOffsetBasis = 2166136261U;
+        constexpr size_t FnvPrime       = 16777619U;
+#endif
+        auto Value = FnvOffsetBasis;
+        for (size_t idx = 0; idx < Count; ++idx) {
+            Value ^= static_cast<size_t>(Buffer[idx]);
+            Value *= FnvPrime;
+        }
+        return Value;
+    }
+
+    template<size_t Size>
+    constexpr size_t Fnv1aHash(const char(&Buffer)[Size]) noexcept
+    {
+        return Fnv1aHash(Buffer, Size - 1);
+    }
+}
+
+
 EXTERN_C DRIVER_INITIALIZE DriverEntry;
 EXTERN_C DRIVER_UNLOAD     DriverUnload;
 
@@ -41,10 +81,11 @@ namespace Main
     )
     {
         PAGED_CODE();
-        UNREFERENCED_PARAMETER(DriverObject);
         UNREFERENCED_PARAMETER(RegistryPath);
 
         NTSTATUS Status;
+        ULONG TestsRun    = 0;
+        ULONG TestsFailed = 0;
 
         do {
             DriverObject->DriverUnload = Main::DriverUnload;
@@ -55,8 +96,69 @@ namespace Main
                 break;
             }
 
-            MusaLOG("Test ZwGetCurrentProcessorNumber() return %lu",
-                ZwGetCurrentProcessorNumber());
+            MusaLOG("=== MusaCoreLite Kernel Test Suite ===");
+
+            KTEST_EXPECT(MusaCoreLiteNtdllBase != nullptr,
+                "NtdllBase_IsNonNull");
+
+            KTEST_EXPECT(MusaCoreLiteNtBase != nullptr,
+                "NtBase_IsNonNull");
+
+            KTEST_EXPECT(MusaCoreLiteGetSystemRoutine("ZwQuerySystemTime") != nullptr,
+                "GetSystemRoutine_KnownName_ReturnsNonNull");
+
+            {
+                ULONG ProcessorNumber = ZwGetCurrentProcessorNumber();
+                MusaLOG("ZwGetCurrentProcessorNumber() = %lu", ProcessorNumber);
+                KTEST_EXPECT(true,
+                    "GetSystemRoutine_ZwGetCurrentProcessorNumber_Callable");
+            }
+
+            KTEST_EXPECT(
+                MusaCoreLiteGetSystemRoutine("ZwThisFunctionDefinitelyDoesNotExist") == nullptr,
+                "GetSystemRoutine_UnknownName_ReturnsNull");
+
+            {
+                constexpr size_t Hash = Fnv1aHash("ZwQuerySystemTime");
+                KTEST_EXPECT(MusaCoreLiteGetSystemRoutineByNameHash(Hash) != nullptr,
+                    "GetSystemRoutineByNameHash_KnownHash_ReturnsNonNull");
+            }
+
+            {
+                constexpr size_t Hash = Fnv1aHash("ZwThisFunctionDefinitelyDoesNotExist");
+                KTEST_EXPECT(MusaCoreLiteGetSystemRoutineByNameHash(Hash) == nullptr,
+                    "GetSystemRoutineByNameHash_UnknownHash_ReturnsNull");
+            }
+
+            {
+                static const char* const RoutineNames[] = {
+                    "ZwClose",
+                    "ZwCreateFile",
+                    "ZwQueryInformationProcess",
+                };
+                for (ULONG i = 0; i < RTL_NUMBER_OF(RoutineNames); ++i) {
+                    PVOID Address = MusaCoreLiteGetSystemRoutine(RoutineNames[i]);
+                    KTEST_EXPECT(Address != nullptr, RoutineNames[i]);
+                }
+            }
+
+            {
+                const char* Name = "ZwQuerySystemTime";
+                constexpr size_t Hash = Fnv1aHash("ZwQuerySystemTime");
+                PVOID AddressByName = MusaCoreLiteGetSystemRoutine(Name);
+                PVOID AddressByHash = MusaCoreLiteGetSystemRoutineByNameHash(Hash);
+                KTEST_EXPECT(AddressByName == AddressByHash,
+                    "GetSystemRoutine_ConsistentWithByNameHash");
+            }
+
+            MusaLOG("=== Results: %lu/%lu passed ===",
+                TestsRun - TestsFailed, TestsRun);
+
+            if (TestsFailed > 0) {
+                MusaLOG("%lu test(s) FAILED", TestsFailed);
+                Status = STATUS_UNSUCCESSFUL;
+                break;
+            }
         } while (false);
 
         if (!NT_SUCCESS(Status)) {
