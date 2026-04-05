@@ -41,33 +41,22 @@ jobs:
           echo "BuildVersion=$BuildVersion" >> $env:GITHUB_ENV
           echo $BuildVersion
 
-      - name: Diagnose WDK Toolset
+      - name: Install Windows Driver Kit
         shell: cmd
         run: |
-          echo === VCToolsInstallDir ===
-          echo %VCToolsInstallDir%
+          winget install --source winget --exact --id Microsoft.WindowsWDK.10.0.26100 --accept-source-agreements --accept-package-agreements --silent --log "%RUNNER_TEMP%\wdk-install.log"
+          if %ERRORLEVEL% NEQ 0 (
+            echo WDK installation failed, dumping log:
+            type "%RUNNER_TEMP%\wdk-install.log"
+            exit /B 1
+          )
 
-          echo === VS Install Path (vswhere) ===
-          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do set "VSINSTALLPATH=%%i"
-          echo %VSINSTALLPATH%
-
-          echo === WDK PlatformToolset directories ===
-          dir "%VSINSTALLPATH%\MSBuild\Microsoft\VC\v170\Platforms\x64\PlatformToolsets\WindowsKernelModeDriver10.0\" 2>nul || echo "WindowsKernelModeDriver10.0 NOT found under VS MSBuild path"
-
-          echo === WDK Registry Key ===
-          reg query "HKLM\SOFTWARE\Microsoft\Windows Kits\Installed Roots" /v KitsRoot10 2>nul || echo "KitsRoot10 registry key NOT found"
-
-          echo === WDK km include ===
-          dir "C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km\fltKernel.h" 2>nul || echo "fltKernel.h NOT found at expected path"
-
-          echo === WDK build props ===
-          dir "C:\Program Files (x86)\Windows Kits\10\build\10.0.26100.0\WindowsDriver.KernelMode.props" 2>nul || echo "WindowsDriver.KernelMode.props NOT found"
-
-          echo === Installed VS workloads (WDK related) ===
-          "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -requires Microsoft.VisualStudio.Component.WDK -property installationPath 2>nul || echo "WDK workload component NOT found in VS"
-
-          echo === MSBuild location ===
-          where msbuild 2>nul || echo "msbuild not found in PATH"
+      - name: Install WDK VS Extension
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -nologo -latest -products * -property enginePath`) do (
+            "%%i\VSIXInstaller.exe" /q "%ProgramFiles(x86)%\Windows Kits\10\Vsix\VS2022\10.0.26100.0\%PROCESSOR_ARCHITECTURE%\WDK.vsix"
+          )
 
       - name: Build
         shell: cmd
