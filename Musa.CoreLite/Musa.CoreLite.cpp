@@ -4,7 +4,7 @@
 #include "Musa.Utilities.h"
 
 #ifdef ALLOC_PRAGMA
-#pragma alloc_text(INIT, MusaCoreLiteStartup)
+#pragma alloc_text(PAGE, MusaCoreLiteStartup)
 #pragma alloc_text(PAGE, MusaCoreLiteShutdown)
 #endif
 
@@ -22,6 +22,8 @@ extern"C"
 #ifdef _KERNEL_MODE
     NTSTATUS MUSA_API MusaCoreLiteStartup()
     {
+        PAGED_CODE();
+
         NTSTATUS Status;
         HANDLE   NtdllSectionHandle = nullptr;
 
@@ -38,24 +40,30 @@ extern"C"
                 break;
             }
 
-            Status = Utils::GetKnownDllSectionHandle(&NtdllSectionHandle, L"ntdll.dll", SECTION_MAP_READ | SECTION_QUERY);
-            if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to get ntdll section handle: 0x%X", Status);
-                break;
+            // Attempt to get ntdll user-space TransferAddress via KnownDlls.
+            // This may fail during boot-start (KnownDlls not yet populated);
+            // MusaCoreLiteNtdllBase will remain null, which is acceptable.
+            {
+                NTSTATUS NtdllStatus = Utils::GetKnownDllSectionHandle(
+                    &NtdllSectionHandle, L"ntdll.dll", SECTION_MAP_READ | SECTION_QUERY);
+                if (NT_SUCCESS(NtdllStatus)) {
+                    SECTION_IMAGE_INFORMATION SectionImageInfo{};
+                    NtdllStatus = ZwQuerySection(NtdllSectionHandle, SectionImageInformation,
+                        &SectionImageInfo, sizeof(SectionImageInfo), nullptr);
+                    if (NT_SUCCESS(NtdllStatus)) {
+                        MusaCoreLiteNtdllBase = SectionImageInfo.TransferAddress;
+                    }
+                    else {
+                        MusaLOG("Failed to query ntdll section information: 0x%X", NtdllStatus);
+                    }
+                }
             }
-
-            SECTION_IMAGE_INFORMATION SectionImageInfo{};
-            Status = ZwQuerySection(NtdllSectionHandle, SectionImageInformation,
-                &SectionImageInfo, sizeof(SectionImageInfo), nullptr);
-            if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to query ntdll section information: 0x%X", Status);
-                break;
-            }
-            MusaCoreLiteNtdllBase = SectionImageInfo.TransferAddress;
 
             Status = SystemCallSetup();
             if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to setup system call, 0x%08lX", Status);
+                if (Status != STATUS_RETRY) {
+                    MusaLOG("Failed to setup system call, 0x%08lX", Status);
+                }
                 break;
             }
 
@@ -148,6 +156,7 @@ extern"C"
             return Status;
         }
 
+    #ifndef _KERNEL_MODE
         if (MusaCoreLiteNtdllBaseSecure) {
             Status = ZwUnmapViewOfSection(ZwCurrentProcess(), MusaCoreLiteNtdllBaseSecure);
             if (!NT_SUCCESS(Status)) {
@@ -156,6 +165,7 @@ extern"C"
             }
             MusaCoreLiteNtdllBaseSecure = nullptr;
         }
+    #endif
 
         Status = Heap::HeapTeardown();
         if (!NT_SUCCESS(Status)) {
@@ -179,5 +189,30 @@ extern"C"
     )
     {
         return GetSystemRoutineAddressByNameHash(nullptr, NameHash);
+    }
+
+    PVOID MUSA_API MusaCoreLiteGetNtdllBase()
+    {
+    #ifdef _KERNEL_MODE
+        if (MusaCoreLiteNtdllBase == nullptr) {
+            HANDLE SectionHandle = nullptr;
+
+            NTSTATUS Status = Utils::GetKnownDllSectionHandle(
+                &SectionHandle, L"ntdll.dll", SECTION_MAP_READ | SECTION_QUERY);
+            if (NT_SUCCESS(Status)) {
+                SECTION_IMAGE_INFORMATION SectionImageInfo{};
+                Status = ZwQuerySection(SectionHandle, SectionImageInformation,
+                    &SectionImageInfo, sizeof(SectionImageInfo), nullptr);
+                if (NT_SUCCESS(Status)) {
+                    MusaCoreLiteNtdllBase = SectionImageInfo.TransferAddress;
+                }
+            }
+
+            if (SectionHandle) {
+                (void)ZwClose(SectionHandle);
+            }
+        }
+    #endif
+        return MusaCoreLiteNtdllBase;
     }
 }

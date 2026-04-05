@@ -66,11 +66,6 @@ protected:
 // Tests
 // ---------------------------------------------------------------------------
 
-TEST_F(MusaCoreLiteTest, NtdllBaseIsNonNull)
-{
-    EXPECT_NE(MusaCoreLiteNtdllBase, nullptr);
-}
-
 TEST_F(MusaCoreLiteTest, GetSystemRoutine_KnownName_ReturnsNonNull)
 {
     PVOID Address = MusaCoreLiteGetSystemRoutine("ZwQuerySystemTime");

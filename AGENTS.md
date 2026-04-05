@@ -19,15 +19,15 @@ Musa.CoreLite.cpp (orchestrator)
 
 All implementation lives in `Musa.CoreLite/` (12 source files). Multiple .vcxproj projects reference this shared source via `$(SourcesDirectory)`.
 
-## Public API (4 functions + 2 globals)
+## Public API (5 functions + 1 global)
 | Symbol | Purpose | Mode |
 |--------|---------|------|
 | `MusaCoreLiteStartup()` | Init: heap -> module bases -> syscall table | both |
 | `MusaCoreLiteShutdown()` | Teardown: syscall table -> unmap -> heap | both |
 | `MusaCoreLiteGetSystemRoutine(name)` | Resolve Zw* by name string | both |
 | `MusaCoreLiteGetSystemRoutineByNameHash(hash)` | Resolve Zw* by FNV-1a hash | both |
+| `MusaCoreLiteGetNtdllBase()` | Get ntdll user-space base (lazy init in kernel) | both |
 | `MusaCoreLiteNtdllBase` | ntdll base address | both |
-| `MusaCoreLiteNtBase` | ntoskrnl base | kernel only |
 
 ## Projects in Solution (Musa.CoreLite.slnx)
 | Project | Type | Notes |
@@ -88,6 +88,7 @@ Consumer links are auto-injected via BeforeTargets=Link:
 - Never define `_KERNEL_MODE` in user-mode projects — use project configs
 - Never call Startup/Shutdown concurrently or more than once
 - Never call Shutdown at IRQL > APC_LEVEL (it's in PAGE section)
+- Never assign `MmMapViewInSystemSpace` address to `MusaCoreLiteNtdllBase` — it expects the user-space address from `TransferAddress`
 - Stub default-return (STATUS_NOT_SUPPORTED) silently masks missing symbols — always check return values
 - pragma warning suppressions (6101, 28101, 28167, 4117) in universal.h files hide static analysis findings
 

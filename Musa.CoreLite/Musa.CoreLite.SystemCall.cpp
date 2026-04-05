@@ -87,7 +87,12 @@
 // .text:0000000140200834 B3 2D 00 14                           B               KiServiceInternal
 // .text:0000000140200834                       ; End of function ZwCreateFile
 
+EXTERN_C PVOID MusaCoreLiteNtdllBase;
 EXTERN_C PVOID MusaCoreLiteNtdllBaseSecure;
+
+#ifdef _KERNEL_MODE
+EXTERN_C PVOID MusaCoreLiteNtBase;
+#endif
 
 namespace Musa::CoreLite
 {
@@ -119,8 +124,6 @@ namespace Musa::CoreLite
     NTSTATUS MUSA_API SystemCallSetup()
     {
         NTSTATUS Status;
-        HANDLE   SectionHandle    = nullptr;
-        PVOID    SectionObject    = nullptr;
         PVOID    ImageBaseOfNtdll = nullptr;
 
         RtlInitializeGenericTableAvl(&SyscallTableByName,
@@ -136,24 +139,17 @@ namespace Musa::CoreLite
             nullptr);
 
         do {
-            // get ntdll.dll base
-            Status = Utils::GetKnownDllSectionHandle(&SectionHandle, L"ntdll.dll", SECTION_MAP_READ | SECTION_QUERY);
+            // map ntdll image into system space for export enumeration
+            Status = Utils::MapNtdllImage(&ImageBaseOfNtdll);
             if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to get ntdll section handle: 0x%X", Status);
-                break;
-            }
+                MusaLOG("Failed to map ntdll image: 0x%X", Status);
 
-            Status = ObReferenceObjectByHandle(SectionHandle, SECTION_MAP_READ | SECTION_QUERY,
-                *MmSectionObjectType, KernelMode, &SectionObject, nullptr);
-            if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to reference ntdll section object: 0x%X", Status);
-                break;
-            }
-
-            SIZE_T ViewSize = 0;
-            Status = MmMapViewInSystemSpace(SectionObject, &ImageBaseOfNtdll, &ViewSize);
-            if (!NT_SUCCESS(Status)) {
-                MusaLOG("Failed to map ntdll section: 0x%X", Status);
+                // Transient failures (filesystem not yet mounted during boot-start):
+                // propagate as STATUS_RETRY so the caller can re-attempt later.
+                if (Status == STATUS_OBJECT_PATH_NOT_FOUND ||
+                    Status == STATUS_OBJECT_NAME_NOT_FOUND) {
+                    Status = STATUS_RETRY;
+                }
                 break;
             }
 
@@ -452,15 +448,7 @@ namespace Musa::CoreLite
         while (false);
 
         if (ImageBaseOfNtdll) {
-            (void)MmUnmapViewInSystemSpace(ImageBaseOfNtdll);
-        }
-
-        if (SectionObject) {
-            ObDereferenceObject(SectionObject);
-        }
-
-        if (SectionHandle) {
-            (void)ZwClose(SectionHandle);
+            Utils::UnmapNtdllImage(ImageBaseOfNtdll);
         }
 
         if (NT_SUCCESS(Status)) {

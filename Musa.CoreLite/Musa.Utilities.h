@@ -78,4 +78,14 @@ namespace Musa::Utils
         _In_    SIZE_T* ViewSize
     );
 
+#ifdef _KERNEL_MODE
+    NTSTATUS MUSA_API MapNtdllImage(
+        _Out_ PVOID* ImageBase
+    );
+
+    VOID MUSA_API UnmapNtdllImage(
+        _In_ PVOID ImageBase
+    );
+#endif
+
 }

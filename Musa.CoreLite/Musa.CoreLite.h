@@ -25,13 +25,10 @@
 
 EXTERN_C_START
 
-#ifdef _KERNEL_MODE
-extern PVOID MusaCoreLiteNtBase;
-#endif
-extern PVOID MusaCoreLiteNtdllBase;
-
 NTSTATUS MUSA_API MusaCoreLiteStartup();
 NTSTATUS MUSA_API MusaCoreLiteShutdown();
+
+PVOID    MUSA_API MusaCoreLiteGetNtdllBase();
 
 PVOID    MUSA_API MusaCoreLiteGetSystemRoutine(
     _In_z_ const char* Name

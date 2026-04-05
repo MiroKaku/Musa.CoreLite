@@ -141,6 +141,95 @@ namespace Musa::Utils
         return Status;
     }
 
+#ifdef _KERNEL_MODE
+    NTSTATUS MUSA_API MapNtdllImage(
+        _Out_ PVOID* ImageBase
+    )
+    {
+        *ImageBase = nullptr;
+
+        NTSTATUS Status;
+        HANDLE   SectionHandle = nullptr;
+        PVOID    SectionObject = nullptr;
+        PVOID    MappedBase    = nullptr;
+        HANDLE   FileHandle    = nullptr;
+
+        do {
+            // Try \KnownDlls first (available after smss.exe initializes)
+            Status = GetKnownDllSectionHandle(&SectionHandle, L"ntdll.dll", SECTION_MAP_READ | SECTION_QUERY);
+            if (!NT_SUCCESS(Status)) {
+                if (Status != STATUS_OBJECT_NAME_NOT_FOUND) {
+                    break;
+                }
+
+                // Fallback: open ntdll.dll from disk (boot-start scenario)
+                UNICODE_STRING NtdllPath{};
+                Status = RtlInitUnicodeStringEx(&NtdllPath, L"\\SystemRoot\\System32\\ntdll.dll");
+                if (!NT_SUCCESS(Status)) {
+                    break;
+                }
+
+                OBJECT_ATTRIBUTES ObjectAttributes;
+                InitializeObjectAttributes(&ObjectAttributes, &NtdllPath,
+                    OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, nullptr, nullptr)
+
+                IO_STATUS_BLOCK IoStatusBlock{};
+                Status = ZwCreateFile(&FileHandle, FILE_READ_DATA | SYNCHRONIZE, &ObjectAttributes,
+                    &IoStatusBlock, nullptr, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ,
+                    FILE_OPEN, FILE_NON_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT, nullptr, 0);
+                if (!NT_SUCCESS(Status)) {
+                    MusaLOG("Failed to open ntdll.dll from disk: 0x%X", Status);
+                    break;
+                }
+
+                Status = ZwCreateSection(&SectionHandle, SECTION_MAP_READ | SECTION_QUERY,
+                    nullptr, nullptr, PAGE_READONLY, SEC_IMAGE, FileHandle);
+                if (!NT_SUCCESS(Status)) {
+                    MusaLOG("Failed to create ntdll section from file: 0x%X", Status);
+                    break;
+                }
+            }
+
+            Status = ObReferenceObjectByHandle(SectionHandle, SECTION_MAP_READ | SECTION_QUERY,
+                *MmSectionObjectType, KernelMode, &SectionObject, nullptr);
+            if (!NT_SUCCESS(Status)) {
+                break;
+            }
+
+            SIZE_T ViewSize = 0;
+            Status = MmMapViewInSystemSpace(SectionObject, &MappedBase, &ViewSize);
+            if (!NT_SUCCESS(Status)) {
+                break;
+            }
+
+            *ImageBase = MappedBase;
+            MappedBase = nullptr;
+        } while (false);
+
+        if (MappedBase) {
+            (void)MmUnmapViewInSystemSpace(MappedBase);
+        }
+        if (SectionObject) {
+            ObDereferenceObject(SectionObject);
+        }
+        if (SectionHandle) {
+            (void)ZwClose(SectionHandle);
+        }
+        if (FileHandle) {
+            (void)ZwClose(FileHandle);
+        }
+
+        return Status;
+    }
+
+    VOID MUSA_API UnmapNtdllImage(
+        _In_ PVOID ImageBase
+    )
+    {
+        (void)MmUnmapViewInSystemSpace(ImageBase);
+    }
+#endif
+
     NTSTATUS MUSA_API RemapSectionView(
         _Inout_ HANDLE* SectionHandle,
         _In_    PVOID*  ViewBase,
