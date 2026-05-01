@@ -44,7 +44,7 @@ All implementation lives in `Musa.CoreLite/` (12 source files). Multiple .vcxpro
 - **BuildAllTargets.proj**: Restore + parallel build, 6 configs (Debug/Release x x86/x64/ARM64)
 - **Output**: `Output/Binaries/<Config>/<Platform>/` (test exe here)
 - **Publish**: `Publish/` dir has headers, libs, stubs, config props/targets
-- **NuGet dep**: Musa.Veil 1.7.0 (central management via Directory.Packages.Cpp.props)
+- **NuGet dep**: Musa.Veil 1.8.0 (central management via Directory.Packages.Cpp.props)
 
 ## Linking Strategy (Musa.CoreLite.Config.targets)
 Consumer links are auto-injected via BeforeTargets=Link:
